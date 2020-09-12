@@ -1,15 +1,16 @@
-import { Table, Layout } from 'antd'
+import { Table, Layout, Pagination, Input, Row, Col, DatePicker, Select } from 'antd'
 import React, { Component } from 'react'
 import { connect } from 'react-redux';
 import movieActions from '../store/actions/MovieActions';
 import moment from 'moment'
 import { Link } from 'react-router-dom';
-const { Content } = Layout;
 
+const { Content } = Layout;
+const { Option } = Select;
 const { movieFetch } = movieActions;
+
 class Movie extends Component {
     state = {
-        default: ":)))",
         columns: [
             {
                 title: 'Title',
@@ -19,7 +20,7 @@ class Movie extends Component {
             {
                 title: 'Year',
                 dataIndex: 'Year',
-                render: text => moment(text.replace("–", "")).format("yyyy"),
+                render: text => moment(text.replace("–", "")).format("yyyy") !== "Invalid date" ? moment(text.replace("–", "")).format("yyyy") : text,
             },
             {
                 title: 'ImdbID',
@@ -28,17 +29,68 @@ class Movie extends Component {
 
 
         ],
-        data: this.props.movies
+        movieNameFilter: undefined,
+        currentPage: 1,
+        yearFilter: undefined,
+        type:undefined,
     }
     componentDidMount() {
         this.props.movieFetch();
     }
 
+    paginationOnChange = (pageNumber) => {
+        this.props.movieFetch(this.state.movieNameFilter, pageNumber, this.state.yearFilter,this.state.type);
+        this.setState({
+            currentPage: pageNumber
+        })
+        console.log('Page: ', pageNumber);
+    }
+    movieNameFilter = (e) => {
+        this.setState({
+            currentPage: 1,
+            movieNameFilter: e.target.value === "" ? undefined : e.target.value
+        })
+        console.log(e.target.value)
+        this.props.movieFetch(e.target.value === "" ? undefined : e.target.value, 1, this.state.yearFilter,this.state.type);
+    }
+    yearFilter = (date, dateString) => {
+        this.setState({
+            currentPage:1,
+            yearFilter: dateString
+        })
+        this.props.movieFetch(this.state.movieNameFilter, this.state.currentPage, dateString,this.state.type);
+    }
+    typeChange = (value) => {
+        console.log(value)
+        this.setState({
+            currentPage:1,
+            type:value==="alltype"?undefined:value
+        })
+        this.props.movieFetch(this.state.movieNameFilter, this.state.currentPage, this.state.yearFilter,value==="alltype"?undefined:value);
+    }
+
     render() {
-        console.log(this.props)
         return (
             <Content style={{ padding: '0 50px' }}>
-                <Table columns={this.state.columns} rowKey={p => p.imdbID} dataSource={this.props.movies} />
+                <Row>
+                    <Col span={8}>
+                        <Input allowClear placeholder="Movie name" onChange={this.movieNameFilter} />
+                    </Col>
+                    <Col span={8}>
+                        <DatePicker onChange={this.yearFilter} picker="year" />
+                    </Col>
+                    <Col span={8}>
+                        <Select defaultValue={"alltype"} style={{ width: 120 }} onChange={this.typeChange}>
+                            <Option value="alltype" >AllType</Option>
+                            <Option value="movie">Movie</Option>
+                            <Option value="series">Series</Option>
+                            <Option value="episode" >Episode</Option>
+                        </Select>
+                    </Col>
+                </Row>
+
+                <Table columns={this.state.columns} rowKey={p => p.imdbID} dataSource={this.props.movies} pagination={false} />
+                <Pagination current={this.state.currentPage} defaultCurrent={1} total={this.props.totalMovie} showSizeChanger={false} onChange={this.paginationOnChange} />
             </Content>
 
         )
@@ -46,9 +98,10 @@ class Movie extends Component {
 }
 
 const mapStateToProps = state => {
-    const { movies } = state.movie;
+    const { movies, totalMovie } = state.movie;
     return {
-        movies
+        movies,
+        totalMovie
     }
 };
 
