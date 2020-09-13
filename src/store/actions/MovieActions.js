@@ -1,11 +1,11 @@
 import Axios from "axios";
-
+const apiUrl="http://www.omdbapi.com/?apikey=d0cc69a"
 const movieActions = {
     MOVIE_FETCH_SUCCESS: 'MOVIE_FETCH_SUCCESS',
     MOVIE_FETCH_BY_ID_SUCCESS: 'MOVIE_FETCH_BY_ID_SUCCESS',
     movieFetch: (s = "pokemon", page = 1, y, type) => {
         return dispatch => {
-            Axios.get("http://www.omdbapi.com/?apikey=d0cc69a", {
+            Axios.get(apiUrl, {
                 params: {
                     s,
                     page,
@@ -21,7 +21,7 @@ const movieActions = {
     },
     movieFetchById(i) {
         return dispatch => {
-            Axios.get("http://www.omdbapi.com/?apikey=d0cc69a", {
+            Axios.get(apiUrl, {
                 params: {
                     i
                 }
